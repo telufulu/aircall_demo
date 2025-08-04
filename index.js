@@ -8,8 +8,9 @@ const aircall_token = Buffer.from(`${aircall_id}:${aircall_secret}`).toString('b
 
 const app = express();
 app.use(express.json());
-const PORT = process.env.PORT;
-const WEBHOOK_URL = 'MY_URL/webhook';
+const PORT = process.env.PORT || 4242;
+const URL = process.env.URL;
+const WEBHOOK_URL = `${URL}/webhook`;
 
 const headers = {
   Authorization: `Basic ${aircall_token}`,
@@ -78,10 +79,10 @@ app.post("/webhook", (req, res) => {
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   try {
-    /*// Delete old webhooks
+    // Delete old webhooks
     await deleteAllMyWebhooks();
     // Create new webhook
-   */ const createRes = await axios.post("https://api.aircall.io/v1/webhooks", {
+   const createRes = await axios.post("https://api.aircall.io/v1/webhooks", {
       url: WEBHOOK_URL,
       events: ["call.created", "call.answered", "call.ended"],
       active: true

@@ -18,7 +18,7 @@ const headers = {
 }
 
 // Functions
-async function deleteAllMyWebhooks()
+async function deleteWebhooks()
 {
   let url = "https://api.aircall.io/v1/webhooks";
   let deletedCount = 0;
@@ -42,7 +42,7 @@ async function deleteAllMyWebhooks()
 app.get("/active_webhooks", (req, res) => {
   axios.get("https://api.aircall.io/v1/webhooks", { headers }
   ).then(res => {
-    console.log("🔍 Webhooks activos:");
+    console.log("Active webhooks:");
     console.dir(res.data);
   });
 });
@@ -80,15 +80,15 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   try {
     // Delete old webhooks
-    await deleteAllMyWebhooks();
+    await deleteWebhooks();
     // Create new webhook
-   const createRes = await axios.post("https://api.aircall.io/v1/webhooks", {
+   const response = await axios.post("https://api.aircall.io/v1/webhooks", {
       url: WEBHOOK_URL,
       events: ["call.created", "call.answered", "call.ended"],
       active: true
     }, { headers });
-    const newWebhook = createRes.data.webhook;
-    console.log(`✅ Webhook created: ${newWebhook.id}`);
+    const newWebhook = response.data.webhook;
+    console.log(`✅ Webhook created: ${newWebhook.webhook_id}`);
     console.log(`Available events: ${newWebhook.events.join(", ")}`);
   } catch (err) {
     console.error("❌ Error:", err.response?.data || err.message);

@@ -76,19 +76,19 @@ app.post("/webhook", (req, res) => {
 
 // Start the server
 app.listen(PORT, async () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
   try {
-    // Delete old webhooks
+    /*// Delete old webhooks
     await deleteAllMyWebhooks();
     // Create new webhook
-   /* const createRes = await axios.post("https://api.aircall.io/v1/webhooks", {
+   */ const createRes = await axios.post("https://api.aircall.io/v1/webhooks", {
       url: WEBHOOK_URL,
       events: ["call.created", "call.answered", "call.ended"],
       active: true
     }, { headers });
     const newWebhook = createRes.data.webhook;
     console.log(`✅ Webhook created: ${newWebhook.id}`);
-    console.log(`Available events: ${newWebhook.events.join(", ")}`);*/
+    console.log(`Available events: ${newWebhook.events.join(", ")}`);
   } catch (err) {
     console.error("❌ Error:", err.response?.data || err.message);
   }

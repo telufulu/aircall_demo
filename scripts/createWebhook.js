@@ -28,13 +28,14 @@ async function createWebhook()
 			if (webhooks.some(h => h.url === WEBHOOK_URL))
 			{
 				console.log("✅ Webhook ya registrado. No se crea uno nuevo.");
+				return ;
 			}
 			url = res.data.meta?.next_page_link || null;
 		}
 		const response = await axios.post("https://api.aircall.io/v1/webhooks",
 		{
 			url: WEBHOOK_URL,
-			events: ["call.created", "call.answered", "call.ended"],
+			events: ["call.ended"],
 			active: true
 		}, { headers });
 			const newWebhook = response.data.webhook;

@@ -27,7 +27,7 @@ const headers =
 }
 
 // Functions
-async function newPage(callData)
+async function newNotionPage(callData)
 {
 	try
 	{
@@ -35,21 +35,48 @@ async function newPage(callData)
 		await notion.pages.create(
 		{
 			parent:
-			{	
+			{
 				database_id: notion_id
 			},
 			properties:
 			{
-				"Call ID": { number: callData.id},
-				//"Started": { date: callData.start},
-				//"End": { date: callData.end}
+				"Call ID": { number: callData.id },
+				"Duration": { number: callData.duration },
+				"Name": { title: [{ text: { content: callData.customer_name }}]},
+				"Customer phone": { rich_text: [{ text: { content: callData.customer_phone }}]},
+				"Customer mood": { select: { name: callData.customer_mood || "unknown" }},
+				"Employee": { rich_text: [{ text: { content: callData.assigned_to }}]},
+				"Summary": { rich_text: [{ text: { content: callData.assigned_to }}]},
+				"Start-End": { date: { start: callData.start_at, end: callData.end_at }}
 			}
 		});
 	}
+    catch (error)
+    {
+        console.error(`❌ Error: call number ${callData.id} failed`);
+        console.dir(error.body || error.message);
+    }
+}
+
+async function ai_data(callId)
+{
+	try
+	{
+		const response = await axios.get(`https://api.aircall.io/v1/calls/${callId}/ai`, { headers });
+		const ai = response.data.ai;
+		const agent = ai.speakers.find(s => s.type === "agent");
+		const customer = ai.speakers.find(s => s.type === "customer");
+		return {
+			summary: ai.summary?.text || "No summary available",
+			transcription: ai.transcript?.text || "No transcript available",
+			customer_mood: customer?.mood || null,
+			agent_mood: agent?.mood || null
+		};
+	}
 	catch (error)
 	{
-		console.error(`❌ Error: call number ${callData.id} failed`);
-		console.dir(error.body || error.message);
+		console.error(`❌ Error fetching AI data for call ${callId}`);
+		console.dir(error.response?.data || error.message);
 	}
 }
 
@@ -59,12 +86,21 @@ app.post("/webhook", async (req, res) =>
 	const callData = req.body.data;
 	const fCallData = 
 	{
-		id: callData.call_id,
+		id: callData.id,
 		start_at: new Date(callData.started_at * 1000).toISOString(),
-		end_at: new Date(callData.ended_at * 1000).toISOString()
+		end_at: new Date(callData.ended_at * 1000).toISOString(),
+		duration: callData.duration,
+		customer_phone: callData.contact.phone_numbers[0].value,
+		customer_name: `${callData.contact.first_name} ${callData.contact.last_name}`,
+		customer_mood: "negative",
+		assigned_to: `${callData.number.name} (${callData.number.e164_digits})`
 	}	
 	console.log(`\t🎟️ Webhook received`);
-	await newPage(fCallData);
+	if (fCallData.duration > 60)
+	{
+		ai_data(fCallData.id);
+		await newNotionPage(fCallData);
+	}
 });
 
 app.listen(PORT, async () =>

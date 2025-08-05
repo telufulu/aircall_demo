@@ -68,9 +68,7 @@ async function ai_data(callId)
 		const customer = ai.speakers.find(s => s.type === "customer");
 		return {
 			summary: ai.summary?.text || "No summary available",
-			transcription: ai.transcript?.text || "No transcript available",
-			customer_mood: customer?.mood || null,
-			agent_mood: agent?.mood || null
+			mood: customer?.mood || null
 		};
 	}
 	catch (error)
